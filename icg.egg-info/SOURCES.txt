@@ -1,5 +1,8 @@
 README.md
 setup.py
+api/__init__.py
+api/models.py
+api/server.py
 artifacts/__init__.py
 artifacts/store.py
 benchmarks/__init__.py
@@ -10,6 +13,7 @@ cli/commands/__init__.py
 cli/commands/discover.py
 cli/commands/info.py
 cli/commands/run.py
+cli/commands/serve.py
 contracts/__init__.py
 contracts/contract.py
 contracts/serializer.py

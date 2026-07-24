@@ -11,5 +11,8 @@ setup(
     },
     install_requires=[
         "PyYAML",
+        "fastapi",
+        "uvicorn",
+        "pydantic"
     ],
 )

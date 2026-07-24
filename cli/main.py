@@ -1,6 +1,6 @@
 import argparse
 import sys
-from cli.commands import run, info, discover
+from cli.commands import run, info, discover, serve
 
 def main():
     parser = argparse.ArgumentParser(description="ICG CLI - Internet Capability Graph")
@@ -9,6 +9,7 @@ def main():
     run.setup_parser(subparsers)
     info.setup_parser(subparsers)
     discover.setup_parser(subparsers)
+    serve.setup_parser(subparsers)
     
     args = parser.parse_args()
     
@@ -18,6 +19,8 @@ def main():
         sys.exit(info.execute(args))
     elif args.command == "discover":
         sys.exit(discover.execute(args))
+    elif args.command == "serve":
+        sys.exit(serve.execute(args))
 
 if __name__ == "__main__":
     main()

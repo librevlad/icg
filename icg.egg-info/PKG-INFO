@@ -2,4 +2,7 @@ Metadata-Version: 2.4
 Name: icg
 Version: 0.1.0
 Requires-Dist: PyYAML
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: pydantic
 Dynamic: requires-dist
