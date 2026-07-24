@@ -7,6 +7,7 @@ from planning.simple_planner import SimplePlanner
 from scheduler.scheduler import Scheduler
 from workspace.workspace import Workspace
 from executors.bash import BashExecutor
+from executors.gemini_api import GeminiAPIExecutor
 from discovery.discovery import LocalDiscoveryService
 from providers.registry import CapabilityRegistry
 
@@ -34,6 +35,7 @@ def execute(args) -> int:
             graph.register_executor(ex)
             
     graph.register_executor(BashExecutor())
+    graph.register_executor(GeminiAPIExecutor())
     
     engine = ExecutionEngine(
         graph=graph,

@@ -1,0 +1,7 @@
+id: "example-write-code"
+task_description: "Write a simple Python script to calculate Fibonacci sequence and print the 10th number."
+requires:
+  - coding
+constraints:
+  language: "python"
+  output_format: "Provide only the python code block, nothing else."

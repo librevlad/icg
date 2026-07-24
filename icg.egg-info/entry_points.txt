@@ -1,0 +1,2 @@
+[console_scripts]
+icg = cli.main:main

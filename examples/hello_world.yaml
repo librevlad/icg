@@ -1,0 +1,6 @@
+id: "example-hello"
+task_description: "Print a greeting message"
+requires: 
+  - execution
+inputs:
+  command: "echo 'Hello World from ICG!'"
