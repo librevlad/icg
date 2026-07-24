@@ -1,0 +1,2 @@
+class NodeProtocol:
+    pass

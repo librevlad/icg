@@ -1,43 +1,54 @@
 import json
 import yaml
-from typing import Dict, Any
 from .contract import Contract
+from core.types import ContractStatus
 
 class ContractSerializer:
-    """
-    Handles serialization and deserialization of Contracts.
-    Decouples the Contract object from its storage format (YAML, JSON, etc).
-    """
-
     @staticmethod
-    def from_dict(data: Dict[str, Any]) -> Contract:
-        return Contract(
-            id=data.get("id", "unknown"),
-            task_description=data.get("task", ""),
-            requires=data.get("requires", []),
-            constraints=data.get("constraints", []),
-            inputs=data.get("inputs", {}),
-            outputs=data.get("outputs", {}),
-            acceptance_criteria=data.get("acceptance", [])
-        )
-
-    @staticmethod
-    def to_dict(contract: Contract) -> Dict[str, Any]:
+    def to_dict(contract: Contract) -> dict:
         return {
             "id": contract.id,
-            "task": contract.task_description,
+            "task_description": contract.task_description,
             "requires": contract.requires,
             "constraints": contract.constraints,
             "inputs": contract.inputs,
             "outputs": contract.outputs,
-            "acceptance": contract.acceptance_criteria
+            "acceptance_criteria": contract.acceptance_criteria,
+            "workspace": contract.workspace,
+            "status": contract.status.value,
+            "created_at": contract.created_at
         }
 
     @staticmethod
-    def from_yaml(yaml_content: str) -> Contract:
-        data = yaml.safe_load(yaml_content)
-        return ContractSerializer.from_dict(data)
+    def from_dict(data: dict) -> Contract:
+        contract = Contract(
+            id=data["id"],
+            task_description=data["task_description"],
+            requires=data.get("requires", [])
+        )
+        contract.constraints = data.get("constraints", {})
+        contract.inputs = data.get("inputs", {})
+        contract.outputs = data.get("outputs", {})
+        contract.acceptance_criteria = data.get("acceptance_criteria", [])
+        contract.workspace = data.get("workspace", "")
+        if "status" in data:
+            contract.status = ContractStatus(data["status"])
+        if "created_at" in data:
+            contract.created_at = data["created_at"]
+        return contract
 
     @staticmethod
+    def from_json(json_str: str) -> Contract:
+        return ContractSerializer.from_dict(json.loads(json_str))
+
+    @staticmethod
+    def to_json(contract: Contract) -> str:
+        return json.dumps(ContractSerializer.to_dict(contract))
+        
+    @staticmethod
+    def from_yaml(yaml_str: str) -> Contract:
+        return ContractSerializer.from_dict(yaml.safe_load(yaml_str))
+        
+    @staticmethod
     def to_yaml(contract: Contract) -> str:
-        return yaml.dump(ContractSerializer.to_dict(contract), sort_keys=False)
+        return yaml.dump(ContractSerializer.to_dict(contract))

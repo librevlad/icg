@@ -1,38 +1,85 @@
 import os
+import glob
 import shutil
+import hashlib
+from typing import List, Dict
 
 class Workspace:
-    """
-    Workspace isolates the execution environment and context.
-    Future features will include checkout, branch, patch, snapshot, and rollback.
-    """
-    
     def __init__(self, root_path: str):
-        self.root_path = os.path.abspath(root_path)
-        if not os.path.exists(self.root_path):
-            os.makedirs(self.root_path)
+        self._root_path = os.path.abspath(root_path)
+        os.makedirs(self._root_path, exist_ok=True)
 
-    def get_path(self, relative_path: str) -> str:
-        """Resolves a relative path to the workspace root safely."""
-        return os.path.join(self.root_path, relative_path)
+    @property
+    def root_path(self) -> str:
+        return self._root_path
 
-    def read_file(self, relative_path: str) -> str:
-        with open(self.get_path(relative_path), 'r', encoding='utf-8') as f:
+    def root(self) -> str:
+        return self._root_path
+
+    def exists(self) -> bool:
+        return os.path.exists(self._root_path)
+
+    def _safe_path(self, path: str) -> str:
+        safe = os.path.abspath(os.path.join(self._root_path, path))
+        if not safe.startswith(self._root_path):
+            raise ValueError(f"Path traversal detected: {path}")
+        return safe
+
+    def read(self, path: str) -> str:
+        with open(self._safe_path(path), 'r', encoding='utf-8') as f:
             return f.read()
 
-    def write_file(self, relative_path: str, content: str):
-        path = self.get_path(relative_path)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, 'w', encoding='utf-8') as f:
+    def write(self, path: str, content: str):
+        safe_p = self._safe_path(path)
+        os.makedirs(os.path.dirname(safe_p), exist_ok=True)
+        with open(safe_p, 'w', encoding='utf-8') as f:
             f.write(content)
 
-    def execute_command(self, cmd: str) -> str:
-        """
-        Temporarily allows running simple commands in the workspace.
-        This might be delegated entirely to a Bash Node later, but useful for basic Git operations.
-        """
-        import subprocess
-        result = subprocess.run(cmd, shell=True, cwd=self.root_path, capture_output=True, text=True)
-        if result.returncode != 0:
-            raise RuntimeError(f"Command failed: {result.stderr}")
-        return result.stdout
+    def delete(self, path: str):
+        safe_p = self._safe_path(path)
+        if os.path.isfile(safe_p):
+            os.remove(safe_p)
+        elif os.path.isdir(safe_p):
+            shutil.rmtree(safe_p)
+
+    def list_files(self, pattern: str = None) -> List[str]:
+        results = []
+        exclude_dirs = {'.git', '__pycache__', 'venv', 'node_modules'}
+        for root, dirs, files in os.walk(self._root_path):
+            dirs[:] = [d for d in dirs if d not in exclude_dirs]
+            for file in files:
+                rel_path = os.path.relpath(os.path.join(root, file), self._root_path)
+                if not pattern or glob.fnmatch.fnmatch(rel_path, pattern):
+                    results.append(rel_path)
+        return results
+
+    def find(self, text: str) -> List[str]:
+        results = []
+        for file in self.list_files():
+            try:
+                if text in self.read(file):
+                    results.append(file)
+            except UnicodeDecodeError:
+                pass
+        return results
+
+    def snapshot(self) -> Dict[str, str]:
+        snap = {}
+        for file in self.list_files():
+            try:
+                content = self.read(file).encode('utf-8')
+                snap[file] = hashlib.md5(content).hexdigest()
+            except:
+                pass
+        return snap
+
+    def diff(self, old_snapshot: Dict[str, str]) -> Dict[str, List[str]]:
+        current = self.snapshot()
+        added = [f for f in current if f not in old_snapshot]
+        deleted = [f for f in old_snapshot if f not in current]
+        modified = [f for f in current if f in old_snapshot and current[f] != old_snapshot[f]]
+        return {"added": added, "modified": modified, "deleted": deleted}
+
+    def apply_patch(self, path: str, patch: str):
+        # Extremely basic patch application MVP
+        self.write(path, patch)

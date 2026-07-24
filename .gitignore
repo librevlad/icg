@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+venv/
+.env
+deploy.zip
+gen1.py
+gen2.py
+zip_deploy.py
+test_ws/
+icg_memory.db
